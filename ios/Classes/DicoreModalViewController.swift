@@ -163,6 +163,10 @@ class DicoreModalViewController: UIViewController {
             super.init()
         }
         
+        func createArgsCodec() -> FlutterMessageCodec & NSObjectProtocol {
+            return FlutterStandardMessageCodec.sharedInstance()
+        }
+        
         func create(withFrame frame: CGRect, viewIdentifier viewId: Int64, arguments args: Any?) -> UIView {
             guard let strongParent = parentVC else { return UIView() }
             

@@ -2,7 +2,7 @@ import Flutter
 import UIKit
 
 class DicoreModalViewController: UIViewController {
-    private let flutterView: FlutterView
+    private let flutterEngine: FlutterEngine
     private let properties: [String: Any]
     private let viewId: String
     private let channel: FlutterMethodChannel
@@ -12,7 +12,7 @@ class DicoreModalViewController: UIViewController {
         self.viewId = viewId
         self.properties = properties
         self.registrar = registrar
-        self.flutterView = FlutterView(frame: .zero, engine: registrar.lookupEngine())
+        self.flutterEngine = (registrar.messenger() as! FlutterEngine)
         self.channel = FlutterMethodChannel(name: "dicore_modal/\(viewId)", binaryMessenger: registrar.messenger())
         
         super.init(nibName: nil, bundle: nil)
@@ -49,7 +49,9 @@ class DicoreModalViewController: UIViewController {
             }
         }
         
-        isModalInPresentation = !(properties["isDismissable"] as? Bool ?? true)
+        if #available(iOS 13.0, *) {
+            isModalInPresentation = !(properties["isDismissable"] as? Bool ?? true)
+        }
         
         if let backgroundColor = properties["backgroundColor"] as? Int {
             view.backgroundColor = UIColor(rgb: backgroundColor)
@@ -127,7 +129,7 @@ class DicoreModalViewController: UIViewController {
                 button.tintColor = UIColor(rgb: tintColor)
             }
             return button
-        } else if let systemImageName = props["systemImageName"] as? String {
+        } else if #available(iOS 13.0, *), let systemImageName = props["systemImageName"] as? String {
             let image = UIImage(systemName: systemImageName)
             let button = UIBarButtonItem(image: image, style: .plain, target: self, action: action)
             if let tintColor = props["tintColor"] as? Int {
@@ -154,6 +156,7 @@ class DicoreModalViewController: UIViewController {
     }
     
     private func setupFlutterView() {
+        let flutterView = flutterEngine.viewController.view!
         view.addSubview(flutterView)
         flutterView.translatesAutoresizingMaskIntoConstraints = false
         

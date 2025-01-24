@@ -2,7 +2,7 @@ import FlutterMacOS
 import AppKit
 
 class DicoreModalViewController: NSViewController {
-    private let flutterView: FlutterView
+    private let flutterEngine: FlutterEngine
     private let properties: [String: Any]
     private let viewId: String
     private let channel: FlutterMethodChannel
@@ -12,7 +12,7 @@ class DicoreModalViewController: NSViewController {
         self.viewId = viewId
         self.properties = properties
         self.registrar = registrar
-        self.flutterView = FlutterView(frame: .zero)
+        self.flutterEngine = (registrar.messenger() as! FlutterEngine)
         self.channel = FlutterMethodChannel(name: "dicore_modal/\(viewId)", binaryMessenger: registrar.messenger)
         
         super.init(nibName: nil, bundle: nil)
@@ -121,11 +121,15 @@ class DicoreModalViewController: NSViewController {
         }
         
         if let systemImageName = props["systemImageName"] as? String {
-            button.image = NSImage(systemSymbolName: systemImageName, accessibilityDescription: nil)
+            if #available(macOS 11.0, *) {
+                button.image = NSImage(systemSymbolName: systemImageName, accessibilityDescription: nil)
+            }
         }
         
         if let tintColor = props["tintColor"] as? Int {
-            button.contentTintColor = NSColor(rgb: tintColor)
+            if #available(macOS 10.14, *) {
+                button.contentTintColor = NSColor(rgb: tintColor)
+            }
         }
         
         button.target = self
@@ -143,6 +147,7 @@ class DicoreModalViewController: NSViewController {
     }
     
     private func setupFlutterView() {
+        let flutterView = flutterEngine.viewController.view
         view.addSubview(flutterView)
         flutterView.translatesAutoresizingMaskIntoConstraints = false
         

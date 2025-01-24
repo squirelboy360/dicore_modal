@@ -2,22 +2,17 @@ import Flutter
 import UIKit
 
 class DicoreModalViewController: UIViewController {
-    private let flutterEngine: FlutterEngine
     private let properties: [String: Any]
     private let viewId: String
     private let channel: FlutterMethodChannel
     private let registrar: FlutterPluginRegistrar
-    private var flutterViewController: FlutterViewController!
+    private var platformView: UIView?
     
     init(viewId: String, properties: [String: Any], registrar: FlutterPluginRegistrar) {
         self.viewId = viewId
         self.properties = properties
         self.registrar = registrar
-        let engine = FlutterEngine(name: "dicore_modal.\(viewId)")
-        engine.run(withEntrypoint: nil, initialRoute: "/modal/\(viewId)")
-        self.flutterEngine = engine
         self.channel = FlutterMethodChannel(name: "dicore_modal/\(viewId)", binaryMessenger: registrar.messenger())
-        self.flutterViewController = FlutterViewController(engine: self.flutterEngine, nibName: nil, bundle: nil)
         
         super.init(nibName: nil, bundle: nil)
         
@@ -32,7 +27,6 @@ class DicoreModalViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         setupFlutterView()
-        setupGestures()
     }
     
     private func setupModalProperties() {
@@ -160,49 +154,53 @@ class DicoreModalViewController: UIViewController {
     }
     
     private func setupFlutterView() {
-        flutterViewController = FlutterViewController(engine: flutterEngine, nibName: nil, bundle: nil)
-        if let flutterView = flutterViewController.view {
-            view.addSubview(flutterView)
+        let factory = FlutterPlatformViewFactory(messenger: registrar.messenger()) { [weak self] viewId in
+            guard let strongSelf = self else { return UIView() }
+            
+            let flutterView = UIView(frame: .zero)
             flutterView.translatesAutoresizingMaskIntoConstraints = false
             
-            let topAnchor = view.subviews.first(where: { $0 is UINavigationBar })?.bottomAnchor ?? view.topAnchor
+            // Set up method channel for state synchronization
+            let stateChannel = FlutterMethodChannel(
+                name: "dicore_modal/state/\(strongSelf.viewId)",
+                binaryMessenger: strongSelf.registrar.messenger()
+            )
             
-            NSLayoutConstraint.activate([
-                flutterView.topAnchor.constraint(equalTo: topAnchor),
-                flutterView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-                flutterView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-                flutterView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
-            ])
-        }
-    }
-    
-    private func setupGestures() {
-        if properties["swipeToDismiss"] as? Bool ?? true {
-            let panGesture = UIPanGestureRecognizer(target: self, action: #selector(handlePanGesture(_:)))
-            view.addGestureRecognizer(panGesture)
-        }
-    }
-    
-    @objc private func handlePanGesture(_ gesture: UIPanGestureRecognizer) {
-        let translation = gesture.translation(in: view)
-        let velocity = gesture.velocity(in: view)
-        
-        switch gesture.state {
-        case .changed:
-            if translation.y > 0 {
-                view.transform = CGAffineTransform(translationX: 0, y: translation.y)
-            }
-        case .ended:
-            if velocity.y > 1000 || translation.y > view.bounds.height / 3 {
-                dismiss(animated: true)
-            } else {
-                UIView.animate(withDuration: 0.3) {
-                    self.view.transform = .identity
+            stateChannel.setMethodCallHandler { [weak flutterView] call, result in
+                switch call.method {
+                case "updateState":
+                    guard let args = call.arguments as? [String: Any] else {
+                        result(FlutterError(code: "INVALID_ARGUMENTS", message: "Invalid arguments", details: nil))
+                        return
+                    }
+                    // Handle state updates from Flutter
+                    result(nil)
+                default:
+                    result(FlutterMethodNotImplemented)
                 }
             }
-        default:
-            break
+            
+            return flutterView
         }
+        
+        registrar.register(factory, withId: viewId)
+        
+        let platformView = factory.create(withViewIdentifier: Int64(viewId) ?? 0,
+                                         arguments: ["initialState": properties])
+        
+        view.addSubview(platformView)
+        platformView.translatesAutoresizingMaskIntoConstraints = false
+        
+        let topView = view.subviews.first { $0 != platformView }
+        
+        NSLayoutConstraint.activate([
+            platformView.topAnchor.constraint(equalTo: (topView?.bottomAnchor ?? view.topAnchor)),
+            platformView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            platformView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            platformView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
+        ])
+        
+        self.platformView = platformView
     }
 }
 

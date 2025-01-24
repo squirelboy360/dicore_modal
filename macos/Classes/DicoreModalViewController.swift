@@ -146,16 +146,39 @@ class DicoreModalViewController: NSViewController {
     }
     
     private func setupFlutterView() {
-        let factory = FlutterPlatformViewFactory(messenger: registrar.messenger) { viewId in
-            let platformView = NSView(frame: .zero)
-            platformView.translatesAutoresizingMaskIntoConstraints = false
-            return platformView
+        let factory = FlutterPlatformViewFactory(messenger: registrar.messenger) { [weak self] viewId in
+            guard let strongSelf = self else { return NSView() }
+            
+            let flutterView = NSView(frame: .zero)
+            flutterView.translatesAutoresizingMaskIntoConstraints = false
+            
+            // Set up method channel for state synchronization
+            let stateChannel = FlutterMethodChannel(
+                name: "dicore_modal/state/\(strongSelf.viewId)",
+                binaryMessenger: strongSelf.registrar.messenger
+            )
+            
+            stateChannel.setMethodCallHandler { [weak flutterView] call, result in
+                switch call.method {
+                case "updateState":
+                    guard let args = call.arguments as? [String: Any] else {
+                        result(FlutterError(code: "INVALID_ARGUMENTS", message: "Invalid arguments", details: nil))
+                        return
+                    }
+                    // Handle state updates from Flutter
+                    result(nil)
+                default:
+                    result(FlutterMethodNotImplemented)
+                }
+            }
+            
+            return flutterView
         }
         
         registrar.register(factory, withId: viewId)
         
         let platformView = factory.create(withViewIdentifier: Int64(viewId) ?? 0,
-                                         arguments: ["route": "/modal/\(viewId)"])
+                                         arguments: ["initialState": properties])
         
         view.addSubview(platformView)
         platformView.translatesAutoresizingMaskIntoConstraints = false

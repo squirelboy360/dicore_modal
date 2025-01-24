@@ -7,6 +7,7 @@ class DicoreModalViewController: UIViewController {
     private let viewId: String
     private let channel: FlutterMethodChannel
     private let registrar: FlutterPluginRegistrar
+    private var flutterViewController: FlutterViewController?
     
     init(viewId: String, properties: [String: Any], registrar: FlutterPluginRegistrar) {
         self.viewId = viewId

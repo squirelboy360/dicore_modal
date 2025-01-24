@@ -147,7 +147,9 @@ class DicoreModalViewController: NSViewController {
     }
     
     private func setupFlutterView() {
-        let flutterView = flutterEngine.viewController.view
+        let flutterViewController = FlutterViewController(engine: flutterEngine, nibName: nil, bundle: nil)
+        let flutterView = flutterViewController.view
+        addChild(flutterViewController)
         view.addSubview(flutterView)
         flutterView.translatesAutoresizingMaskIntoConstraints = false
         
@@ -159,6 +161,7 @@ class DicoreModalViewController: NSViewController {
             flutterView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             flutterView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
         ])
+        flutterViewController.didMove(toParent: self)
     }
 }
 

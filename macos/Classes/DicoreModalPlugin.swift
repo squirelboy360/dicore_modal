@@ -65,7 +65,6 @@ public class DicoreModalPlugin: NSObject, FlutterPlugin {
             }
         }
         DispatchQueue.main.async(execute: workItem)
-        }
     }
     
     private func dismissModal(modalId: String?) {
@@ -87,6 +86,5 @@ public class DicoreModalPlugin: NSObject, FlutterPlugin {
             }
         }
         DispatchQueue.main.async(execute: workItem)
-        }
     }
 }

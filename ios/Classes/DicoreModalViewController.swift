@@ -153,17 +153,26 @@ class DicoreModalViewController: UIViewController {
         channel.invokeMethod("onTrailingButtonTap", arguments: nil)
     }
     
-    private func setupFlutterView() {
-        let factory = FlutterPlatformViewFactory(messenger: registrar.messenger()) { [weak self] viewId in
-            guard let strongSelf = self else { return UIView() }
+    private class ModalPlatformViewFactory: NSObject, FlutterPlatformViewFactory {
+        private let messenger: FlutterBinaryMessenger
+        private weak var parentVC: DicoreModalViewController?
+        
+        init(messenger: FlutterBinaryMessenger, parentVC: DicoreModalViewController) {
+            self.messenger = messenger
+            self.parentVC = parentVC
+            super.init()
+        }
+        
+        func create(withFrame frame: CGRect, viewIdentifier viewId: Int64, arguments args: Any?) -> UIView {
+            guard let strongParent = parentVC else { return UIView() }
             
             let flutterView = UIView(frame: .zero)
             flutterView.translatesAutoresizingMaskIntoConstraints = false
             
             // Set up method channel for state synchronization
             let stateChannel = FlutterMethodChannel(
-                name: "dicore_modal/state/\(strongSelf.viewId)",
-                binaryMessenger: strongSelf.registrar.messenger()
+                name: "dicore_modal/state/\(strongParent.viewId)",
+                binaryMessenger: messenger
             )
             
             stateChannel.setMethodCallHandler { [weak flutterView] call, result in
@@ -182,10 +191,14 @@ class DicoreModalViewController: UIViewController {
             
             return flutterView
         }
-        
+    }
+    
+    private func setupFlutterView() {
+        let factory = ModalPlatformViewFactory(messenger: registrar.messenger(), parentVC: self)
         registrar.register(factory, withId: viewId)
         
-        let platformView = factory.create(withViewIdentifier: Int64(viewId) ?? 0,
+        let platformView = factory.create(withFrame: .zero,
+                                         viewIdentifier: Int64(viewId) ?? 0,
                                          arguments: ["initialState": properties])
         
         view.addSubview(platformView)

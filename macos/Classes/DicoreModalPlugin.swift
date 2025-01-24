@@ -49,7 +49,7 @@ public class DicoreModalPlugin: NSObject, FlutterPlugin {
     }
     
     private func showModal(viewId: String, properties: [String: Any]) {
-        let workItem = DispatchWorkItem { [weak self] in
+        DispatchQueue.main.async { [weak self] in
             guard let strongSelf = self else { return }
             
             let modalVC = DicoreModalViewController(
@@ -64,11 +64,10 @@ public class DicoreModalPlugin: NSObject, FlutterPlugin {
                 window.contentViewController?.presentAsSheet(modalVC)
             }
         }
-        DispatchQueue.main.async(execute: workItem)
     }
     
     private func dismissModal(modalId: String?) {
-        let workItem = DispatchWorkItem { [weak self] in
+        DispatchQueue.main.async { [weak self] in
             guard let strongSelf = self else { return }
             
             if let modalId = modalId {
@@ -85,6 +84,5 @@ public class DicoreModalPlugin: NSObject, FlutterPlugin {
                 }
             }
         }
-        DispatchQueue.main.async(execute: workItem)
     }
 }

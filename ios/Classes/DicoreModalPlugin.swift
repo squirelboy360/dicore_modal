@@ -77,7 +77,7 @@ public class DicoreModalPlugin: NSObject, FlutterPlugin {
                     strongSelf.modals.removeValue(forKey: modalId)
                 }
             } else {
-                if let modalVC = strongSelf.modals.values.last {
+                if let modalVC = Array(strongSelf.modals.values).last {
                     modalVC.dismiss(animated: true)
                     if let key = strongSelf.modals.first(where: { $0.value === modalVC })?.key {
                         strongSelf.modals.removeValue(forKey: key)

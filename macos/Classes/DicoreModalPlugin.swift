@@ -67,7 +67,7 @@ public class DicoreModalPlugin: NSObject, FlutterPlugin {
     }
     
     private func dismissModal(modalId: String?) {
-        DispatchQueue.main.async { [weak self] _ in
+        DispatchQueue.main.async { [weak self] in
             guard let strongSelf = self else { return }
             
             if let modalId = modalId {

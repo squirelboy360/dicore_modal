@@ -13,7 +13,7 @@ class DicoreModalViewController: NSViewController {
         self.viewId = viewId
         self.properties = properties
         self.registrar = registrar
-        self.flutterEngine = (registrar.messenger() as! FlutterEngine)
+        self.flutterEngine = (registrar.messenger as! FlutterEngine)
         self.channel = FlutterMethodChannel(name: "dicore_modal/\(viewId)", binaryMessenger: registrar.messenger)
         
         super.init(nibName: nil, bundle: nil)
@@ -154,7 +154,7 @@ class DicoreModalViewController: NSViewController {
         view.addSubview(flutterView)
         flutterView.translatesAutoresizingMaskIntoConstraints = false
         
-        let topView = view.subviews.first { $0 is NSView && $0 != flutterView }
+        let topView = view.subviews.first { $0 != flutterView }
         
         NSLayoutConstraint.activate([
             flutterView.topAnchor.constraint(equalTo: (topView?.bottomAnchor ?? view.topAnchor)),
@@ -162,7 +162,7 @@ class DicoreModalViewController: NSViewController {
             flutterView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             flutterView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
         ])
-        flutterViewController.didMove(toParent: self)
+        self.flutterViewController = flutterViewController
     }
 }
 

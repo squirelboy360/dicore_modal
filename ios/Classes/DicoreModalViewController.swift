@@ -7,14 +7,15 @@ class DicoreModalViewController: UIViewController {
     private let viewId: String
     private let channel: FlutterMethodChannel
     private let registrar: FlutterPluginRegistrar
-    private var flutterViewController: FlutterViewController
+    private var flutterViewController: FlutterViewController!
     
     init(viewId: String, properties: [String: Any], registrar: FlutterPluginRegistrar) {
         self.viewId = viewId
         self.properties = properties
         self.registrar = registrar
-        self.flutterEngine = (registrar.messenger() as! FlutterEngine)
+        self.flutterEngine = registrar.messenger() as! FlutterEngine
         self.channel = FlutterMethodChannel(name: "dicore_modal/\(viewId)", binaryMessenger: registrar.messenger())
+        self.flutterViewController = FlutterViewController(engine: self.flutterEngine, nibName: nil, bundle: nil)
         
         super.init(nibName: nil, bundle: nil)
         

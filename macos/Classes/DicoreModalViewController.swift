@@ -14,7 +14,7 @@ class DicoreModalViewController: NSViewController {
         self.properties = properties
         self.registrar = registrar
         self.flutterEngine = FlutterEngine(name: "dicore_modal.\(viewId)", project: nil)
-        self.flutterEngine.run(withEntrypoint: nil)
+        self.flutterEngine.run(withEntrypoint: nil, initialRoute: "/modal/\(viewId)")
         self.channel = FlutterMethodChannel(name: "dicore_modal/\(viewId)", binaryMessenger: registrar.messenger)
         
         super.init(nibName: nil, bundle: nil)

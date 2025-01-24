@@ -165,21 +165,28 @@ class DicoreModalViewController: UIViewController {
         
         func createArgsCodec() -> FlutterMessageCodec & NSObjectProtocol {
             return FlutterStandardMessageCodec.sharedInstance()
+        }       
+        func create(withFrame frame: CGRect, viewIdentifier viewId: Int64, arguments args: Any?) -> FlutterPlatformView {
+            return ModalPlatformView(frame: frame, viewIdentifier: viewId, arguments: args, messenger: messenger, parentVC: parentVC)
         }
+    }
+    
+    private class ModalPlatformView: NSObject, FlutterPlatformView {
+        private let flutterView: UIView
+        private let stateChannel: FlutterMethodChannel
         
-        func create(withFrame frame: CGRect, viewIdentifier viewId: Int64, arguments args: Any?) -> UIView {
-            guard let strongParent = parentVC else { return UIView() }
-            
-            let flutterView = UIView(frame: .zero)
+        init(frame: CGRect, viewIdentifier viewId: Int64, arguments args: Any?, messenger: FlutterBinaryMessenger, parentVC: DicoreModalViewController?) {
+            flutterView = UIView(frame: frame)
             flutterView.translatesAutoresizingMaskIntoConstraints = false
             
-            // Set up method channel for state synchronization
-            let stateChannel = FlutterMethodChannel(
-                name: "dicore_modal/state/\(strongParent.viewId)",
+            stateChannel = FlutterMethodChannel(
+                name: "dicore_modal/state/\(parentVC?.viewId ?? "")",
                 binaryMessenger: messenger
             )
             
-            stateChannel.setMethodCallHandler { [weak flutterView] call, result in
+            super.init()
+            
+            stateChannel.setMethodCallHandler { [weak self] call, result in
                 switch call.method {
                 case "updateState":
                     guard let args = call.arguments as? [String: Any] else {
@@ -192,7 +199,9 @@ class DicoreModalViewController: UIViewController {
                     result(FlutterMethodNotImplemented)
                 }
             }
-            
+        }
+        
+        func view() -> UIView {
             return flutterView
         }
     }

@@ -2,19 +2,16 @@ import FlutterMacOS
 import AppKit
 
 class DicoreModalViewController: NSViewController {
-    private let flutterEngine: FlutterEngine
     private let properties: [String: Any]
     private let viewId: String
     private let channel: FlutterMethodChannel
     private let registrar: FlutterPluginRegistrar
-    private var flutterViewController: FlutterViewController?
+    private var platformView: NSView?
     
     init(viewId: String, properties: [String: Any], registrar: FlutterPluginRegistrar) {
         self.viewId = viewId
         self.properties = properties
         self.registrar = registrar
-        self.flutterEngine = FlutterEngine(name: "dicore_modal.\(viewId)", project: nil)
-        self.flutterEngine.run(withEntrypoint: nil, initialRoute: "/modal/\(viewId)")
         self.channel = FlutterMethodChannel(name: "dicore_modal/\(viewId)", binaryMessenger: registrar.messenger)
         
         super.init(nibName: nil, bundle: nil)
@@ -149,21 +146,30 @@ class DicoreModalViewController: NSViewController {
     }
     
     private func setupFlutterView() {
-        let flutterViewController = FlutterViewController(engine: flutterEngine, nibName: nil, bundle: nil)
-        let flutterView = flutterViewController.view
-        addChild(flutterViewController)
-        view.addSubview(flutterView)
-        flutterView.translatesAutoresizingMaskIntoConstraints = false
+        let factory = FlutterPlatformViewFactory(messenger: registrar.messenger) { viewId in
+            let platformView = NSView(frame: .zero)
+            platformView.translatesAutoresizingMaskIntoConstraints = false
+            return platformView
+        }
         
-        let topView = view.subviews.first { $0 != flutterView }
+        registrar.register(factory, withId: viewId)
+        
+        let platformView = factory.create(withViewIdentifier: Int64(viewId) ?? 0,
+                                         arguments: ["route": "/modal/\(viewId)"])
+        
+        view.addSubview(platformView)
+        platformView.translatesAutoresizingMaskIntoConstraints = false
+        
+        let topView = view.subviews.first { $0 != platformView }
         
         NSLayoutConstraint.activate([
-            flutterView.topAnchor.constraint(equalTo: (topView?.bottomAnchor ?? view.topAnchor)),
-            flutterView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            flutterView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            flutterView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
+            platformView.topAnchor.constraint(equalTo: (topView?.bottomAnchor ?? view.topAnchor)),
+            platformView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            platformView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            platformView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
         ])
-        self.flutterViewController = flutterViewController
+        
+        self.platformView = platformView
     }
 }
 

@@ -7,7 +7,7 @@ class DicoreModalViewController: UIViewController {
     private let viewId: String
     private let channel: FlutterMethodChannel
     private let registrar: FlutterPluginRegistrar
-    private var flutterViewController: FlutterViewController?
+    private var flutterViewController: FlutterViewController
     
     init(viewId: String, properties: [String: Any], registrar: FlutterPluginRegistrar) {
         self.viewId = viewId
@@ -157,18 +157,20 @@ class DicoreModalViewController: UIViewController {
     }
     
     private func setupFlutterView() {
-        let flutterView = flutterEngine.viewController.view!
-        view.addSubview(flutterView)
-        flutterView.translatesAutoresizingMaskIntoConstraints = false
-        
-        let topAnchor = view.subviews.first(where: { $0 is UINavigationBar })?.bottomAnchor ?? view.topAnchor
-        
-        NSLayoutConstraint.activate([
-            flutterView.topAnchor.constraint(equalTo: topAnchor),
-            flutterView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            flutterView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            flutterView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
-        ])
+        flutterViewController = FlutterViewController(engine: flutterEngine, nibName: nil, bundle: nil)
+        if let flutterView = flutterViewController.view {
+            view.addSubview(flutterView)
+            flutterView.translatesAutoresizingMaskIntoConstraints = false
+            
+            let topAnchor = view.subviews.first(where: { $0 is UINavigationBar })?.bottomAnchor ?? view.topAnchor
+            
+            NSLayoutConstraint.activate([
+                flutterView.topAnchor.constraint(equalTo: topAnchor),
+                flutterView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+                flutterView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+                flutterView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
+            ])
+        }
     }
     
     private func setupGestures() {

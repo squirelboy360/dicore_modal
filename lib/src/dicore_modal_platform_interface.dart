@@ -1,3 +1,4 @@
+import 'package:dicore_modal/src/method_channel_dicore_modal.dart';
 import 'package:flutter/widgets.dart';
 import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 import 'ios_modal_properties.dart';

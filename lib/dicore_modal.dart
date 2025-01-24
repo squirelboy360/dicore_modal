@@ -1,9 +1,10 @@
 import 'dart:io';
+import 'package:dicore_modal/dicore_modal.dart';
 import 'package:flutter/widgets.dart';
 export 'src/ios_modal_properties.dart';
 export 'src/modal_icons.dart';
 import 'src/dicore_modal_platform_interface.dart';
-import 'src/method_channel_dicore_modal.dart';
+
 
 class DicoreModal {
   static Future<void> show({

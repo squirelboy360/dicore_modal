@@ -99,6 +99,9 @@ class MethodChannelDicoreModal extends DicoreModalPlatform {
   Widget _buildButton(IOSModalTitleBarButton button) {
     return TextButton(
       onPressed: button.onPressed,
+      style: TextButton.styleFrom(
+        foregroundColor: button.tintColor,
+      ),
       child: button.title != null
           ? Text(button.title!)
           : button.systemImageName != null
@@ -106,9 +109,6 @@ class MethodChannelDicoreModal extends DicoreModalPlatform {
               : button.assetImageName != null
                   ? Image.asset(button.assetImageName!)
                   : SizedBox(),
-      style: TextButton.styleFrom(
-        foregroundColor: button.tintColor,
-      ),
     );
   }
 }
